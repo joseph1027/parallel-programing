@@ -65,7 +65,7 @@ void make_table(long long int limit,long long int sizz)
     }*/
 }
 
-int isprime(long long int n,long long int sizz) {
+int isprime(long long int n,long long int sizz,long long int sizz2) {
     long long int i,squareroot;
     if (n>=sizz)
     {
@@ -83,9 +83,9 @@ int isprime(long long int n,long long int sizz) {
                 return 0;
             }
         }
-        if(n>=sizz*sizz)
+        if(n>=sizz2)
         {
-            for(long long int i=sizz*sizz;i<n;i=i+2)
+            for(long long int i=sizz2;i<n;i=i+2)
             {
                 if(n%i==0)
                 {
@@ -111,7 +111,7 @@ int main(int argc, char *argv[])
     sscanf(argv[1],"%llu",&limit);
     printf("Starting. Numbers to be scanned= %lld\n",limit);
 
-    if(limit>=50000000)
+     if(limit>=50000000)
     {
         sizz = 100000000;
     }
@@ -123,19 +123,31 @@ int main(int argc, char *argv[])
     {
         sizz = 1000000;
     }
+    long long int sizz2 = sizz*sizz;
     make_table(limit,sizz);
     /* Assume (2,3,5,7) are counted here */
     //printf("%llu\n",pc);
     for (n=11; n<=limit; n=n+2)
     {
-        if (isprime(n,sizz))
+        if (isprime(n,sizz,sizz2))
         {
             //printf("%d\n",pc);
             pc = pc +1;
             foundone = n;
         }
     }
-    printf("Done. Largest prime is %lld Total primes %lld\n",foundone,pc+4);
+    if(limit>10)
+        printf("Done. Largest prime is %lld Total primes %lld\n",foundone,pc+4);
+    else if(limit == 0 || limit == 1)
+        printf("Done. Largest prime is %lld Total primes %lld\n",0,0);
+    else if (limit ==2)
+        printf("Done. Largest prime is %lld Total primes %lld\n",2,1);
+    else if (limit ==3 || limit ==4)
+        printf("Done. Largest prime is %lld Total primes %lld\n",3,2);
+    else if (limit ==5 || limit == 6)
+        printf("Done. Largest prime is %lld Total primes %lld\n",5,3);
+    else if (limit ==7 || limit ==8 ||limit ==9 ||limit==10)
+        printf("Done. Largest prime is %lld Total primes %lld\n",7,4);
     //printf("%lld\n",pc+4);
     return 0;
 }
