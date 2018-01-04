@@ -3,8 +3,19 @@
 #include <WINDOWS.H>
 #include<opencv2/imgproc/imgproc.hpp>
 #include<opencv2/highgui/highgui.hpp>
-#include<cuda_runtime.h>
+#include<time.h>
 
+// includes, cuda
+#include <vector_types.h>
+#include <driver_functions.h>
+#include <cuda_runtime.h>
+#include <cuda_gl_interop.h>
+
+// CUDA utilities and system includes
+#include <helper_cuda.h>
+#include <helper_cuda_gl.h>
+#include <helper_functions.h>
+#include <vector_types.h>
 #include <math.h>
 using namespace std;
 using namespace cv;
@@ -64,7 +75,7 @@ __global__ void gradient(int* image, int* f_image ,int length,int width)
 		image[y*width + (x + 1)] * (-2) +
 		image[(y + 1)*width + (x + 1)] * (-1);
 
-	int g = sqrt(a*a + b*b);
+	int g = sqrt(float(a*a + b*b));
 
 	g = g > 100 ? 255 : 0;
 	f_image[y*width + x] = g;
@@ -92,14 +103,16 @@ int main()
 	int* cuda_f_image;
 	cudaMalloc((void**)&cuda_image, sizeof(int) * 10000 * 10000);
 	cudaMalloc((void**)&cuda_f_image, sizeof(int) * 10000 * 10000);
+	double a = clock();
 	cudaMemcpy(cuda_image, image, sizeof(int) * 10000 * 10000, cudaMemcpyHostToDevice);
 	
 	int image_size = src.rows*src.cols;
-	gradient<<<(image_size/1024)+1,1024>>>(cuda_image, cuda_f_image, src.rows, src.cols)
+	gradient <<<(image_size / 1024) + 1, 1024 >>> (cuda_image, cuda_f_image, src.rows, src.cols);
 
 	cudaMemcpy(f_image, cuda_f_image, sizeof(int) * 10000 * 10000, cudaMemcpyDeviceToHost);
-
-
+	double b = clock();
+	double diff = (b - a) / CLOCKS_PER_SEC;
+	cout << diff << endl;
 	
 
 	
