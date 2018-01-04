@@ -4,6 +4,7 @@
 #include<opencv2/imgproc/imgproc.hpp>
 #include<opencv2/highgui/highgui.hpp>
 #include<cuda_runtime.h>
+#include<time.h>
 
 #include <math.h>
 using namespace std;
@@ -12,24 +13,24 @@ using namespace cv;
 int image[100000000];
 int f_image[100000000];
 
-int gradient_x(int x, int y,int width)
+int gradient_x(int x, int y, int width)
 {
 	int gx;
 	gx = image[(x - 1)*width + (y - 1)] * 1 + image[(x - 1)*width + y] * 2 + image[(x - 1)*width + (y + 1)] * 1 + image[(x + 1)*width + (y - 1)] * (-1) + image[(x + 1)*width + y] * (-2) + image[(x + 1)*width + (y + 1)] * (-1);
 	return gx;
 }
 
-int gradient_y(int x, int y,int width)
+int gradient_y(int x, int y, int width)
 {
 	int gy;
 	gy = image[(x - 1)*width + (y - 1)] * 1 + image[x*width + (y - 1)] * 2 + image[(x + 1)*width + (y - 1)] * 1 + image[(x - 1)*width + (y + 1)] * (-1) + image[x*width + (y + 1)] * (-2) + image[(x + 1)*width + (y + 1)] * (-1);
 	return gy;
 }
 
-int gradient(int x, int y,int width)
+int gradient(int x, int y, int width)
 {
-	int a = gradient_x(x, y,width);
-	int b = gradient_y(x, y,width);
+	int a = gradient_x(x, y, width);
+	int b = gradient_y(x, y, width);
 
 	int g = sqrt(a*a + b*b);
 	return g;
@@ -39,7 +40,7 @@ int gradient(int x, int y,int width)
 int main()
 {
 	Mat src;
-	src = imread("D:\\testpic\\656029.png",CV_LOAD_IMAGE_GRAYSCALE);
+	src = imread("D:\\testpic\\656029.png", CV_LOAD_IMAGE_GRAYSCALE);
 	Mat dst = src.clone();
 	for (int y = 0; y < src.rows; y++)
 		for (int x = 0; x < src.cols; x++)
@@ -49,10 +50,10 @@ int main()
 	{
 		for (int j = 0; j < src.cols; j++)
 		{
-			image[i*src.cols+j] = src.at<uchar>(i,j);
+			image[i*src.cols + j] = src.at<uchar>(i, j);
 		}
 	}
-
+	double a = clock();
 	//int**
 	//cudaMalloc((void**)&cuda_image, sizeof(int) * 10000 * 10000);
 	//cudaMalloc((void**)&cuda_f_image, sizeof(int) * 10000 * 10000);
@@ -61,17 +62,20 @@ int main()
 	int sum;
 	for (int y = 1; y < src.rows - 1; y++) {
 		for (int x = 1; x < src.cols - 1; x++) {
-			sum = gradient(y,x, src.cols);
+			sum = gradient(y, x, src.cols);
 			//sum = sum > 255 ? 255 : sum;
-			sum = sum > 100? 255 : 0;
-			f_image[y*(src.cols)+x] = sum;
+			sum = sum > 100 ? 255 : 0;
+			f_image[y*(src.cols) + x] = sum;
 		}
 	}
 
-	
+	double b = clock();
+	double diff = (b - a) / CLOCKS_PER_SEC;
+	cout << diff << endl;
+
 	for (int y = 1; y < src.rows - 1; y++) {
 		for (int x = 1; x < src.cols - 1; x++) {
-			dst.at<uchar>(y, x) = f_image[y*(src.cols)+x];
+			dst.at<uchar>(y, x) = f_image[y*(src.cols) + x];
 		}
 	}
 
@@ -85,6 +89,6 @@ int main()
 	imshow("final", dst);
 
 
-	
+
 	waitKey();
 }
