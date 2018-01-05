@@ -85,7 +85,7 @@ __global__ void gradient(int* image, int* f_image,int padding, int width, int le
 int main()
 {
 	Mat src;
-	src = imread("D:\\testpic\\656029.png", CV_LOAD_IMAGE_GRAYSCALE);
+	src = imread("D:\\testpic\\666.png", CV_LOAD_IMAGE_GRAYSCALE);
 	Mat dst = src.clone();
 	for (int y = 0; y < src.rows; y++)
 		for (int x = 0; x < src.cols; x++)
