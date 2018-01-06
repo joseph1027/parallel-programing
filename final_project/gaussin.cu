@@ -60,14 +60,14 @@ __global__ void gradient(int* image, int* f_image, int length, int width)
 		1, 4, 7, 4, 1 };
 
 	int id = blockIdx.x*blockDim.x + threadIdx.x;
-	if (id > length*width)
+	if (id >= length*width)
 	{
 		return;
 	}
 
 	int y = id / width;
 	int x = id % width;
-	if (y <2 || y == length - 2 || x < 2 || x == width - 2)
+	if (y < 2 || y >= length - 2 || x < 2 || x >= width - 2)
 	{
 		return;
 	}
@@ -102,7 +102,7 @@ __global__ void gradient(int* image, int* f_image, int length, int width)
 	g /= 273;
 	if (g > 255)
 		g = 255;
-	f_image[y*width + x] = g;
+	f_image[id] = g;
 }
 
 
@@ -110,7 +110,7 @@ int main()
 {
 	//double a = clock();
 	Mat src;
-	src = imread("D:\\testpic\\333.bmp", CV_LOAD_IMAGE_GRAYSCALE);
+	src = imread("D:\\testpic\\2.jpg", CV_LOAD_IMAGE_GRAYSCALE);
 	Mat dst = src.clone();
 	for (int y = 0; y < src.rows; y++)
 		for (int x = 0; x < src.cols; x++)
@@ -123,27 +123,28 @@ int main()
 			image[i*src.cols + j] = src.at<uchar>(i, j);
 		}
 	}
-
+	int image_size = src.rows*src.cols;
 	int* cuda_image;
 	int* cuda_f_image;
-	double a = clock();
-	cudaMalloc((void**)&cuda_image, sizeof(int) * src.cols * src.rows);
-	cudaMalloc((void**)&cuda_f_image, sizeof(int) * src.cols * src.rows);
-	
-	cudaMemcpy(cuda_image, image, sizeof(int) * src.rows * src.cols, cudaMemcpyHostToDevice);
+	double time_sum = 0;
+	for (int h = 0; h < 10; h++)
+	{
+		double a = clock();
+		cudaMalloc((void**)&cuda_image, sizeof(int) * src.cols * src.rows);
+		cudaMalloc((void**)&cuda_f_image, sizeof(int) * src.cols * src.rows);
+		cudaMemcpy(cuda_image, image, sizeof(int) * src.rows * src.cols, cudaMemcpyHostToDevice);
+		gradient << <(image_size / 64) + 1, 64 >> > (cuda_image, cuda_f_image, src.rows, src.cols);
+		cudaMemcpy(f_image, cuda_f_image, sizeof(int) * src.rows * src.cols, cudaMemcpyDeviceToHost);
+		double b = clock();
+		double diff = (b - a) / CLOCKS_PER_SEC;
+		//cout << diff << endl;
+		time_sum += diff;
+	}
+	cout << time_sum / 10 <<endl;
 
-	int image_size = src.rows*src.cols;
-	gradient << <(image_size / 1024) + 1, 1024 >> > (cuda_image, cuda_f_image, src.rows, src.cols);
 
-	cudaMemcpy(f_image, cuda_f_image, sizeof(int) * src.rows * src.cols, cudaMemcpyDeviceToHost);
-	double b = clock();
-	double diff = (b - a) / CLOCKS_PER_SEC;
-	cout << diff << endl;
-
-
-
-	for (int y = 1; y < src.rows - 1; y++) {
-		for (int x = 1; x < src.cols - 1; x++) {
+	for (int y = 0; y < src.rows ; y++) {
+		for (int x = 0; x < src.cols ; x++) {
 			dst.at<uchar>(y, x) = f_image[y*(src.cols) + x];
 		}
 	}
@@ -157,7 +158,9 @@ int main()
 	namedWindow("final", WINDOW_NORMAL);
 	imshow("final", dst);
 
-	
+	//double b = clock();
+	//double diff = (b - a) / CLOCKS_PER_SEC;
+	//cout << diff << endl;
 
 	waitKey();
 }
