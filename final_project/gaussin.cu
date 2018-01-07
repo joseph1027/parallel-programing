@@ -110,7 +110,7 @@ int main()
 {
 	//double a = clock();
 	Mat src;
-	src = imread("D:\\testpic\\2.jpg", CV_LOAD_IMAGE_GRAYSCALE);
+	src = imread("D:\\testpic\\12800x10240.bmp", CV_LOAD_IMAGE_GRAYSCALE);
 	Mat dst = src.clone();
 	for (int y = 0; y < src.rows; y++)
 		for (int x = 0; x < src.cols; x++)
@@ -126,21 +126,18 @@ int main()
 	int image_size = src.rows*src.cols;
 	int* cuda_image;
 	int* cuda_f_image;
-	double time_sum = 0;
-	for (int h = 0; h < 10; h++)
-	{
-		double a = clock();
-		cudaMalloc((void**)&cuda_image, sizeof(int) * src.cols * src.rows);
-		cudaMalloc((void**)&cuda_f_image, sizeof(int) * src.cols * src.rows);
-		cudaMemcpy(cuda_image, image, sizeof(int) * src.rows * src.cols, cudaMemcpyHostToDevice);
-		gradient << <(image_size / 64) + 1, 64 >> > (cuda_image, cuda_f_image, src.rows, src.cols);
-		cudaMemcpy(f_image, cuda_f_image, sizeof(int) * src.rows * src.cols, cudaMemcpyDeviceToHost);
-		double b = clock();
-		double diff = (b - a) / CLOCKS_PER_SEC;
-		//cout << diff << endl;
-		time_sum += diff;
-	}
-	cout << time_sum / 10 <<endl;
+	
+	
+	cudaMalloc((void**)&cuda_image, sizeof(int) * src.cols * src.rows);
+	cudaMalloc((void**)&cuda_f_image, sizeof(int) * src.cols * src.rows);
+	double a = clock();
+	cudaMemcpy(cuda_image, image, sizeof(int) * src.rows * src.cols, cudaMemcpyHostToDevice);
+	gradient << <(image_size / 32) + 1, 32 >> > (cuda_image, cuda_f_image, src.rows, src.cols);
+	cudaMemcpy(f_image, cuda_f_image, sizeof(int) * src.rows * src.cols, cudaMemcpyDeviceToHost);
+	double b = clock();
+	double diff = (b - a) / CLOCKS_PER_SEC;
+	//cout << diff << endl;
+	cout << diff<<endl;
 
 
 	for (int y = 0; y < src.rows ; y++) {
